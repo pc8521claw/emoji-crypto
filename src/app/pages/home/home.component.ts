@@ -92,6 +92,16 @@ import { EmojiDecryptPipe } from '../../pipes/emoji-decrypt.pipe';
           ❌ {{ error }}
         </div>
       }
+
+      <div class="disclaimer">
+        <p>⚠️ 注意事項</p>
+        <ul>
+          <li>本應用為興趣/示範用途，不適合加密機密文件</li>
+          <li>加密算法為簡單替換密碼，專家用工具可破解</li>
+          <li>適合 WhatsApp 群組等場景的簡單隱私保護</li>
+          <li>請勿用作重要密碼或敏感資料加密</li>
+        </ul>
+      </div>
     </div>
   `,
   styles: [`
@@ -292,6 +302,29 @@ import { EmojiDecryptPipe } from '../../pipes/emoji-decrypt.pipe';
       padding: 1rem;
       border-radius: 0.5rem;
       text-align: center;
+    }
+
+    .disclaimer {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: #fef3c7;
+      border-radius: 0.5rem;
+      font-size: 0.75rem;
+      color: #92400e;
+    }
+
+    .disclaimer p {
+      margin: 0 0 0.5rem 0;
+      font-weight: 600;
+    }
+
+    .disclaimer ul {
+      margin: 0;
+      padding-left: 1.25rem;
+    }
+
+    .disclaimer li {
+      margin-bottom: 0.25rem;
     }
 
     @media (max-width: 640px) {
