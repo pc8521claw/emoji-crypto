@@ -12,7 +12,7 @@ import { EmojiDecryptPipe } from '../../pipes/emoji-decrypt.pipe';
   template: `
     <div class="container">
       <header>
-        <h1>🔐 Emoji Crypto</h1>
+        <h1>😂😜😭 Emoji Crypto 🐷🐮🐥</h1>
         <p class="subtitle">將文字加密成 emoji 表情符號</p>
       </header>
 
@@ -33,20 +33,32 @@ import { EmojiDecryptPipe } from '../../pipes/emoji-decrypt.pipe';
 
       <div class="input-section">
         <label>{{ mode === 'encrypt' ? '輸入文字' : '輸入 Emoji' }}</label>
-        <textarea
-          [(ngModel)]="inputText"
-          [placeholder]="mode === 'encrypt' ? '輸入要加密的文字...' : '貼上要解密的 emoji...'"
-          rows="4"
-        ></textarea>
+        <div class="input-wrapper">
+          <textarea
+            [(ngModel)]="inputText"
+            (ngModelChange)="copied = false"
+            [placeholder]="mode === 'encrypt' ? '輸入要加密的文字...' : '貼上要解密的 emoji...'"
+            rows="4"
+          ></textarea>
+          @if (inputText) {
+            <button class="btn-clear" (click)="clearInput()">✕</button>
+          }
+        </div>
       </div>
 
       <div class="password-section">
         <label>密碼</label>
-        <input
-          type="password"
-          [(ngModel)]="password"
-          placeholder="輸入密碼..."
-        />
+        <div class="password-wrapper">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            [(ngModel)]="password"
+            (ngModelChange)="onPasswordChange()"
+            placeholder="輸入密碼..."
+          />
+          <button class="btn-toggle-password" (click)="togglePassword()">
+            {{ showPassword ? '隱藏' : '顯示' }}
+          </button>
+        </div>
       </div>
 
       <div class="action-section">
@@ -65,8 +77,12 @@ import { EmojiDecryptPipe } from '../../pipes/emoji-decrypt.pipe';
           <div class="result-box">
             <p class="result-text">{{ mode === 'encrypt' ? (inputText | emojiEncrypt:password) : (inputText | emojiDecrypt:password) }}</p>
           </div>
-          <button class="btn-copy" (click)="copyResult()">
-            📋 複製
+          <button 
+            class="btn-copy" 
+            [class.copied]="copied"
+            (click)="copyResult()"
+          >
+            {{ copied ? '✓ 已複製' : '📋 複製' }}
           </button>
         </div>
       }
@@ -122,7 +138,8 @@ import { EmojiDecryptPipe } from '../../pipes/emoji-decrypt.pipe';
     }
 
     .mode-toggle button.active {
-      background: white;
+      background: #6366f1;
+      color: white;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
@@ -203,10 +220,69 @@ import { EmojiDecryptPipe } from '../../pipes/emoji-decrypt.pipe';
       border-radius: 0.5rem;
       cursor: pointer;
       font-size: 0.875rem;
+      transition: all 0.2s;
     }
 
     .btn-copy:hover {
       background: #d5d5d5;
+    }
+
+    .password-wrapper {
+      position: relative;
+    }
+
+    .password-wrapper input {
+      padding-right: 2.5rem;
+    }
+
+    .btn-toggle-password {
+      position: absolute;
+      right: 0.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      border: none;
+      background: #e5e5e5;
+      cursor: pointer;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+    }
+
+    .btn-toggle-password:hover {
+      background: #d5d5d5;
+    }
+
+    .btn-copy.copied {
+      background: #22c55e;
+      color: white;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-wrapper textarea {
+      padding-right: 2.5rem;
+    }
+
+    .btn-clear {
+      position: absolute;
+      right: 0.5rem;
+      top: 0.5rem;
+      width: 1.5rem;
+      height: 1.5rem;
+      border: none;
+      background: #ddd;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-clear:hover {
+      background: #ccc;
     }
 
     .error-message {
@@ -233,10 +309,36 @@ export class HomeComponent {
   mode: 'encrypt' | 'decrypt' = 'encrypt';
   inputText = '';
   password = '';
+  showPassword = false;
   result = false;
   error = '';
+  copied = false;
 
-  constructor(private crypto: EmojiCryptoService) {}
+  constructor(private crypto: EmojiCryptoService) {
+    // Load saved password from localStorage
+    const saved = localStorage.getItem('emoji-crypto-password');
+    if (saved) this.password = saved;
+  }
+
+  onPasswordChange() {
+    // Save password to localStorage
+    if (this.password) {
+      localStorage.setItem('emoji-crypto-password', this.password);
+    } else {
+      localStorage.removeItem('emoji-crypto-password');
+    }
+  }
+
+  togglePassword() {
+    this.showPassword = !this.showPassword;
+  }
+
+  clearInput() {
+    this.inputText = '';
+    this.result = false;
+    this.error = '';
+    this.copied = false;
+  }
 
   process() {
     this.error = '';
@@ -258,13 +360,30 @@ export class HomeComponent {
     this.result = true;
   }
 
-  copyResult() {
+  async copyResult() {
     const text = this.mode === 'encrypt'
       ? this.crypto.encrypt(this.inputText, this.password)
       : this.crypto.decrypt(this.inputText, this.password);
     
     if (text) {
-      navigator.clipboard.writeText(text);
+      try {
+        await navigator.clipboard.writeText(text);
+        this.copied = true;
+        setTimeout(() => this.copied = false, 2000);
+      } catch (err) {
+        console.error('Copy failed:', err);
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        this.copied = true;
+        setTimeout(() => this.copied = false, 2000);
+      }
     }
   }
 }
