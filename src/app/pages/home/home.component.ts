@@ -35,8 +35,8 @@ import { EmojiDecryptPipe } from '../../pipes/emoji-decrypt.pipe';
         <div class="label-row">
           <label>{{ mode === 'encrypt' ? '輸入文字' : '輸入 Emoji' }}</label>
           @if (mode === 'encrypt') {
-            <span class="char-count" [class.overLimit]="inputText.length > 500">
-              {{ inputText.length }}/500
+            <span class="char-count" [class.overLimit]="inputText.length > 2000">
+              {{ inputText.length }}/2000
             </span>
           }
         </div>
@@ -417,7 +417,7 @@ export class HomeComponent {
 
   canSubmit(): boolean {
     if (!this.inputText || !this.password) return false;
-    if (this.mode === 'encrypt' && this.inputText.length > 500) return false;
+    if (this.mode === 'encrypt' && this.inputText.length > 2000) return false;
     return true;
   }
 
