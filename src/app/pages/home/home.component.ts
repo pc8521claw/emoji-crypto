@@ -44,7 +44,6 @@ import { EmojiDecryptPipe } from '../../pipes/emoji-decrypt.pipe';
             (ngModelChange)="onInputChange()"
             [placeholder]="mode === 'encrypt' ? '輸入要加密的文字...' : '貼上要解密的 emoji...'"
             rows="4"
-            maxlength="500"
           ></textarea>
           @if (inputText) {
             <button class="btn-clear" (click)="clearInput()">✕</button>
@@ -446,44 +445,46 @@ export class HomeComponent {
     this.result = true;
   }
 
-  async copyResult() {
+  copyResult() {
     const text = this.mode === 'encrypt'
       ? this.crypto.encrypt(this.inputText, this.password)
       : this.crypto.decrypt(this.inputText, this.password);
     
     if (!text) return;
 
-    // Reset copied state first to ensure visual feedback on each click
-    this.copied = false;
-    
-    try {
-      // Use Clipboard API with explicit await
-      await navigator.clipboard.writeText(text);
-      this.copied = true;
-    } catch (err) {
-      // Fallback for older browsers or permission issues
-      try {
-        const textArea = document.createElement('textarea');
-        textArea.value = text;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-9999px';
-        textArea.style.top = '0';
-        textArea.style.opacity = '0';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        const success = document.execCommand('copy');
-        document.body.removeChild(textArea);
-        this.copied = success;
-      } catch (fallbackErr) {
-        console.error('Copy fallback failed:', fallbackErr);
-        this.copied = false;
-      }
+    // Use the modern Clipboard API
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        this.copied = true;
+        setTimeout(() => this.copied = false, 2000);
+      }).catch((err) => {
+        console.error('Clipboard API failed:', err);
+        // Fallback
+        this.copyWithExecCommand(text);
+      });
+    } else {
+      // Fallback for older browsers
+      this.copyWithExecCommand(text);
     }
-    
-    // Reset copied state after 2 seconds
-    setTimeout(() => {
+  }
+
+  private copyWithExecCommand(text: string) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-9999px';
+    textArea.style.top = '0';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      this.copied = true;
+      setTimeout(() => this.copied = false, 2000);
+    } catch (err) {
+      console.error('execCommand copy failed:', err);
       this.copied = false;
-    }, 2000);
+    }
+    document.body.removeChild(textArea);
   }
 }
