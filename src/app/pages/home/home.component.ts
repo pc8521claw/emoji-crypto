@@ -51,7 +51,7 @@ import { EmojiDecryptPipe } from '../../pipes/emoji-decrypt.pipe';
             <button class="btn-clear" (click)="clearInput()">✕</button>
           }
         </div>
-        @if (mode === 'encrypt' && inputText.length > 500) {
+        @if (isOverLimit()) {
           <p class="warning">⚠️ 超過500字元，解密可能失敗</p>
         }
       </div>
@@ -79,7 +79,7 @@ import { EmojiDecryptPipe } from '../../pipes/emoji-decrypt.pipe';
         <button 
           class="btn-primary"
           (click)="process()"
-          [disabled]="!inputText || !password || (mode === 'encrypt' && inputText.length > 500)"
+          [disabled]="!canSubmit()"
         >
           {{ mode === 'encrypt' ? '🔒 加密' : '🔓 解密' }}
         </button>
@@ -396,6 +396,9 @@ export class HomeComponent {
   onInputChange() {
     this.copied = false;
     this.error = '';
+    if (this.mode === 'decrypt') {
+      this.result = false;
+    }
   }
 
   onPasswordChange() {
@@ -413,6 +416,16 @@ export class HomeComponent {
 
   togglePassword() {
     this.showPassword = !this.showPassword;
+  }
+
+  isOverLimit(): boolean {
+    return this.mode === 'encrypt' && this.inputText.length > 500;
+  }
+
+  canSubmit(): boolean {
+    if (!this.inputText || !this.password) return false;
+    if (this.mode === 'encrypt' && this.inputText.length > 500) return false;
+    return true;
   }
 
   clearInput() {
