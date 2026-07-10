@@ -1,59 +1,118 @@
-# EmojiCrypto
+# 😂😜😭 Emoji Crypto 🐷🐮🐥
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.0.6.
+將文字加密成 emoji 表情符號，增加趣味性！
 
-## Development server
+🔗 **Live Demo:** https://emoji-crypto-nu.vercel.app/
 
-To start a local development server, run:
+---
 
-```bash
-ng serve
+## 📌 重點功能
+
+| 功能 | 說明 |
+|------|------|
+| 🔒 文字 → Emoji | 輸入文字 + 密碼，加密成 Emoji |
+| 🔓 Emoji → 文字 | 輸入 Emoji + 密碼，解密回原始文字 |
+| 🔐 密碼保護 | 密碼打亂 Emoji 排序，增加破解難度 |
+| 💾 密碼記憶 | 密碼自動存入 localStorage |
+| 📋 一鍵複製 | 加密/解密結果一鍵複製到剪貼簿 |
+| 📱 響應式設計 | 支援桌面和手機 |
+
+---
+
+## 📖 詳細功能說明
+
+### 加密模式
+- 輸入要加密的文字
+- 輸入密碼（將用於打亂 Emoji 映射）
+- 點擊「加密」按鈕
+- 複製生成的 Emoji 字符串
+
+### 解密模式
+- 切換到「解密」模式
+- 貼上加密的 Emoji 字符串
+- 輸入加密時使用的密碼
+- 點擊「解密」按鈕
+- 如密碼正確，顯示原始文字
+
+### 加密原理
+1. **文字 → Base64** - 將中文字、其他字符轉換為 Base64
+2. **Base64 → Emoji** - 根據密碼生成的映射表替換為 Emoji
+3. **密碼打亂** - 不同密碼產生不同 Emoji 排序
+
+---
+
+## 🛠 技術棧
+
+| 技術 | 用途 |
+|------|------|
+| **Angular 19** | 前端框架 |
+| **TypeScript** | 程式語言 |
+| **Standalone Components** | 無需 NgModule |
+| **Standalone Pipes** | 可复用的轉換管道 |
+| **Service (DI)** | 核心加密邏輯 |
+| **localStorage** | 密碼持久化 |
+| **Vercel** | 靜態網站托管 |
+
+---
+
+## 🏗 架構
+
+```
+emoji-crypto/
+├── src/app/
+│   ├── services/
+│   │   └── emoji-crypto.service.ts   ← 核心加密/解密邏輯
+│   ├── pipes/
+│   │   ├── emoji-encrypt.pipe.ts     ← 加密管道
+│   │   └── emoji-decrypt.pipe.ts     ← 解密管道
+│   ├── pages/home/
+│   │   └── home.component.ts         ← UI 頁面
+│   └── app.ts                        ← 根組件
+└── dist/emoji-crypto/                ← 建構輸出
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+### 核心服務 (EmojiCryptoService)
 
-## Code scaffolding
+```typescript
+// 生成密碼映射表
+generateMapping(password: string, salt?: string): EmojiMapping
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+// 加密：文字 → Emoji
+encrypt(text: string, password: string, salt?: string): string
 
-```bash
-ng generate component component-name
+// 解密：Emoji → 文字
+decrypt(emojiText: string, password: string, salt?: string): string | null
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+### Standalone Pipes
 
-```bash
-ng generate --help
+```typescript
+// Template 中使用
+{{ text | emojiEncrypt:password }}
+{{ emoji | emojiDecrypt:password }}
 ```
 
-## Building
+---
 
-To build the project run:
+## 🎨 Emoji 庫
 
-```bash
-ng build
-```
+優先使用表情和動物系列 Emoji：
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+- **表情系列** 😀 😃 😄 😁 😆 😅 🤣 😂 😊 🥰 😍
+- **動物系列** 🐶 🐱 🐭 🐹 🐰 🦊 🐻 🐼 🐨 🐯 🦁 🐮 🐷 🐸 🐵
+- **備用物件** 💯 🔥 ⭐ ✨ ⚡ 💥 💬 👋 👍
 
-## Running unit tests
+---
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+## ⚠️ 注意事項
 
-```bash
-ng test
-```
+- 本應用為興趣/示範用途，不適合加密機密文件
+- 加密算法為簡單替換密碼，專家用工具可破解
+- 適合 WhatsApp 群組等場景的簡單隱私保護
+- 請勿用作重要密碼或敏感資料加密
 
-## Running end-to-end tests
+---
 
-For end-to-end (e2e) testing, run:
+## 📝 License
 
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+MIT License
