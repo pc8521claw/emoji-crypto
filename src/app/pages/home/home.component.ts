@@ -34,9 +34,11 @@ import { EmojiDecryptPipe } from '../../pipes/emoji-decrypt.pipe';
       <div class="input-section">
         <div class="label-row">
           <label>{{ mode === 'encrypt' ? '輸入文字' : '輸入 Emoji' }}</label>
-          <span class="char-count" [class.overLimit]="inputText.length > 500">
-            {{ inputText.length }}/500
-          </span>
+          @if (mode === 'encrypt') {
+            <span class="char-count" [class.overLimit]="inputText.length > 500">
+              {{ inputText.length }}/500
+            </span>
+          }
         </div>
         <div class="input-wrapper">
           <textarea
@@ -49,7 +51,7 @@ import { EmojiDecryptPipe } from '../../pipes/emoji-decrypt.pipe';
             <button class="btn-clear" (click)="clearInput()">✕</button>
           }
         </div>
-        @if (inputText.length > 500) {
+        @if (mode === 'encrypt' && inputText.length > 500) {
           <p class="warning">⚠️ 超過500字元，解密可能失敗</p>
         }
       </div>
@@ -77,7 +79,7 @@ import { EmojiDecryptPipe } from '../../pipes/emoji-decrypt.pipe';
         <button 
           class="btn-primary"
           (click)="process()"
-          [disabled]="!inputText || !password || inputText.length > 500"
+          [disabled]="!inputText || !password || (mode === 'encrypt' && inputText.length > 500)"
         >
           {{ mode === 'encrypt' ? '🔒 加密' : '🔓 解密' }}
         </button>
