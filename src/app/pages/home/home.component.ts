@@ -437,8 +437,8 @@ export class HomeComponent {
       return;
     }
 
-    if (this.mode === 'encrypt' && this.inputText.length > 500) {
-      this.error = '輸入文字太長，建議少於500字元';
+    if (this.mode === 'encrypt' && this.inputText.length > 2000) {
+      this.error = '輸入文字太長，建議少於2000字元';
       return;
     }
 
