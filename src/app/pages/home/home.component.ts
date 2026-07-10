@@ -47,7 +47,7 @@ import { EmojiDecryptPipe } from '../../pipes/emoji-decrypt.pipe';
       </div>
 
       <div class="password-section">
-        <label>密碼</label>
+        <label>自訂密碼</label>
         <div class="password-wrapper">
           <input
             [type]="showPassword ? 'text' : 'password'"
