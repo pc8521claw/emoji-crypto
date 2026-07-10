@@ -32,28 +32,41 @@ import { EmojiDecryptPipe } from '../../pipes/emoji-decrypt.pipe';
       </div>
 
       <div class="input-section">
-        <label>{{ mode === 'encrypt' ? '輸入文字' : '輸入 Emoji' }}</label>
+        <div class="label-row">
+          <label>{{ mode === 'encrypt' ? '輸入文字' : '輸入 Emoji' }}</label>
+          <span class="char-count" [class.overLimit]="inputText.length > 500">
+            {{ inputText.length }}/500
+          </span>
+        </div>
         <div class="input-wrapper">
           <textarea
             [(ngModel)]="inputText"
-            (ngModelChange)="copied = false"
+            (ngModelChange)="onInputChange()"
             [placeholder]="mode === 'encrypt' ? '輸入要加密的文字...' : '貼上要解密的 emoji...'"
             rows="4"
+            maxlength="500"
           ></textarea>
           @if (inputText) {
             <button class="btn-clear" (click)="clearInput()">✕</button>
           }
         </div>
+        @if (inputText.length > 500) {
+          <p class="warning">⚠️ 超過500字元，解密可能失敗</p>
+        }
       </div>
 
       <div class="password-section">
-        <label>自訂密碼</label>
+        <div class="label-row">
+          <label>自訂密碼</label>
+          <span class="char-count">{{ password.length }}/20</span>
+        </div>
         <div class="password-wrapper">
           <input
             [type]="showPassword ? 'text' : 'password'"
             [(ngModel)]="password"
             (ngModelChange)="onPasswordChange()"
             placeholder="輸入密碼..."
+            maxlength="20"
           />
           <button class="btn-toggle-password" (click)="togglePassword()">
             {{ showPassword ? '隱藏' : '顯示' }}
@@ -65,7 +78,7 @@ import { EmojiDecryptPipe } from '../../pipes/emoji-decrypt.pipe';
         <button 
           class="btn-primary"
           (click)="process()"
-          [disabled]="!inputText || !password"
+          [disabled]="!inputText || !password || inputText.length > 500"
         >
           {{ mode === 'encrypt' ? '🔒 加密' : '🔓 解密' }}
         </button>
@@ -159,11 +172,26 @@ import { EmojiDecryptPipe } from '../../pipes/emoji-decrypt.pipe';
       margin-bottom: 1.5rem;
     }
 
-    label {
-      display: block;
+    .label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 0.5rem;
+    }
+
+    label {
       font-weight: 500;
       color: #333;
+    }
+
+    .char-count {
+      font-size: 0.75rem;
+      color: #666;
+    }
+
+    .char-count.overLimit {
+      color: #dc2626;
+      font-weight: 600;
     }
 
     textarea,
@@ -181,6 +209,17 @@ import { EmojiDecryptPipe } from '../../pipes/emoji-decrypt.pipe';
     input:focus {
       outline: none;
       border-color: #6366f1;
+    }
+
+    textarea.overLimit,
+    input.overLimit {
+      border-color: #dc2626;
+    }
+
+    .warning {
+      color: #dc2626;
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
     }
 
     .action-section {
@@ -353,7 +392,16 @@ export class HomeComponent {
     if (saved) this.password = saved;
   }
 
+  onInputChange() {
+    this.copied = false;
+    this.error = '';
+  }
+
   onPasswordChange() {
+    // Limit password to 20 characters
+    if (this.password.length > 20) {
+      this.password = this.password.substring(0, 20);
+    }
     // Save password to localStorage
     if (this.password) {
       localStorage.setItem('emoji-crypto-password', this.password);
@@ -382,6 +430,11 @@ export class HomeComponent {
       return;
     }
 
+    if (this.inputText.length > 500) {
+      this.error = '輸入文字太長，建議少於500字元';
+      return;
+    }
+
     if (this.mode === 'decrypt') {
       const decrypted = this.crypto.decrypt(this.inputText, this.password);
       if (!decrypted) {
@@ -398,25 +451,39 @@ export class HomeComponent {
       ? this.crypto.encrypt(this.inputText, this.password)
       : this.crypto.decrypt(this.inputText, this.password);
     
-    if (text) {
+    if (!text) return;
+
+    // Reset copied state first to ensure visual feedback on each click
+    this.copied = false;
+    
+    try {
+      // Use Clipboard API with explicit await
+      await navigator.clipboard.writeText(text);
+      this.copied = true;
+    } catch (err) {
+      // Fallback for older browsers or permission issues
       try {
-        await navigator.clipboard.writeText(text);
-        this.copied = true;
-        setTimeout(() => this.copied = false, 2000);
-      } catch (err) {
-        console.error('Copy failed:', err);
-        // Fallback for older browsers
         const textArea = document.createElement('textarea');
         textArea.value = text;
         textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        textArea.style.top = '0';
         textArea.style.opacity = '0';
         document.body.appendChild(textArea);
+        textArea.focus();
         textArea.select();
-        document.execCommand('copy');
+        const success = document.execCommand('copy');
         document.body.removeChild(textArea);
-        this.copied = true;
-        setTimeout(() => this.copied = false, 2000);
+        this.copied = success;
+      } catch (fallbackErr) {
+        console.error('Copy fallback failed:', fallbackErr);
+        this.copied = false;
       }
     }
+    
+    // Reset copied state after 2 seconds
+    setTimeout(() => {
+      this.copied = false;
+    }, 2000);
   }
 }
