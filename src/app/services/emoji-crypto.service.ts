@@ -86,12 +86,15 @@ export class EmojiCryptoService {
     // 將文字轉換為 Base64（處理中文和其他字符）
     const base64 = btoa(unescape(encodeURIComponent(text)));
     
+    // 移除 Base64 填充字符 '='，解密時唔需要
+    const base64Clean = base64.replace(/=+$/, '');
+    
     // 將 Base64 字符合併成一個字串以便批量處理
     let result = '';
     
-    for (const char of base64) {
+    for (const char of base64Clean) {
       const emoji = mapping.charToEmoji.get(char);
-      result += emoji || char; // 如果找不到就用原字符
+      result += emoji || char;
     }
     
     return result;
@@ -123,9 +126,8 @@ export class EmojiCryptoService {
         }
       }
       
-      const base64 = base64Chars.join('');
-      
       // Base64 -> 原始文字
+      // 注意：解密時唔需要填充字符，atob() 會自動處理
       const decoded = decodeURIComponent(escape(atob(base64)));
       return decoded;
     } catch {
