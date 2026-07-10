@@ -51,9 +51,6 @@ import { EmojiDecryptPipe } from '../../pipes/emoji-decrypt.pipe';
             <button class="btn-clear" (click)="clearInput()">✕</button>
           }
         </div>
-        @if (isOverLimit()) {
-          <p class="warning">⚠️ 超過500字元，解密可能失敗</p>
-        }
       </div>
 
       <div class="password-section">
@@ -416,10 +413,6 @@ export class HomeComponent {
 
   togglePassword() {
     this.showPassword = !this.showPassword;
-  }
-
-  isOverLimit(): boolean {
-    return this.mode === 'encrypt' && this.inputText.length > 500;
   }
 
   canSubmit(): boolean {
