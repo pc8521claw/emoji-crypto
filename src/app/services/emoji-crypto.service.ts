@@ -126,8 +126,9 @@ export class EmojiCryptoService {
         }
       }
       
+      const base64 = base64Chars.join('');
+      
       // Base64 -> 原始文字
-      // 注意：解密時唔需要填充字符，atob() 會自動處理
       const decoded = decodeURIComponent(escape(atob(base64)));
       return decoded;
     } catch {
