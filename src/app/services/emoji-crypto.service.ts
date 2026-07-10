@@ -5,9 +5,6 @@ export interface EmojiMapping {
   emojiToChar: Map<string, string>;
 }
 
-// Base64 字符集
-const BASE64_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-
 // 英文數字字符集
 const ALPHANUMERIC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
@@ -55,8 +52,9 @@ export class EmojiCryptoService {
   private allChars: string;
 
   constructor() {
-    // 組合所有需要映射的字符
-    this.allChars = ALPHANUMERIC + OPERATORS + BASE64_CHARS;
+    // 組合所有需要映射的字符（不重複）
+    // Base64 字符集 = A-Za-z0-9 + '+' + '/'
+    this.allChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
   }
 
   /**
