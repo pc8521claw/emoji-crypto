@@ -110,13 +110,14 @@ export class EmojiCryptoService {
       const iterator = emojiText[Symbol.iterator]();
       let currentCodePoint = '';
       
-      // 簡化處理：假設每個 emoji 都是單一字符
-      // 實際上複雜 emoji 需要更好的分割邏輯
-      for (const char of emojiText) {
-        const original = mapping.emojiToChar.get(char);
+      // 正確分割 emoji（處理多字符 emojis）
+      const emojis = this.splitEmojis(emojiText);
+      
+      for (const emoji of emojis) {
+        const original = mapping.emojiToChar.get(emoji);
         if (original) {
           base64Chars.push(original);
-        } else if (char.trim()) {
+        } else if (emoji.trim()) {
           // 非空白字符但找不到對應，密碼可能錯誤
           return null;
         }
@@ -130,6 +131,41 @@ export class EmojiCryptoService {
     } catch {
       return null; // 解密失敗（密碼錯誤）
     }
+  }
+
+  /**
+   * 將 emoji 文字正確分割為單個 emoji 陣列
+   * 處理多字符 emojis（ZWJ 序列、肌膚色修飾、旗幟等）
+   */
+  private splitEmojis(text: string): string[] {
+    const emojis: string[] = [];
+    
+    // 使用 Intl.Segmenter（現代瀏覽器）
+    if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+      try {
+        const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
+        const segments = segmenter.segment(text);
+        for (const segment of segments) {
+          if (segment.segment.trim()) {
+            emojis.push(segment.segment);
+          }
+        }
+        return emojis;
+      } catch {
+        // Fallback to regex approach
+      }
+    }
+    
+    // Fallback：正則表達式匹配完整 emoji
+    const emojiRegex = /(?:[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}])+(?:\u{FE0F}\u{20E3}|[\u{FE0F}]|[\u{200D}][\u{1F300}-\u{1F9FF}][\u{FE0F}]?|[\u{1F3FB}-\u{1F3FF}])*|[\p{Emoji_Presentation}=\p{Emoji}]+/gu;
+    
+    const matches = text.match(emojiRegex);
+    if (matches) {
+      return matches;
+    }
+    
+    // 最後 fallback：按字符拆分
+    return [...text];
   }
 
   /**
