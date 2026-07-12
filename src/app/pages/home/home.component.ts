@@ -84,17 +84,15 @@ import { EmojiDecryptPipe } from '../../pipes/emoji-decrypt.pipe';
 
       @if (result) {
         <div class="result-section">
-          <label>結果</label>
+          <div class="result-header">
+            <label>結果</label>
+            <button class="btn-copy" [class.copied]="copied" (click)="copyResult()">
+              {{ copied ? '✓ 已複製' : '📋 複製' }}
+            </button>
+          </div>
           <div class="result-box">
             <p class="result-text">{{ mode === 'encrypt' ? (inputText | emojiEncrypt:password) : (inputText | emojiDecrypt:password) }}</p>
           </div>
-          <button 
-            class="btn-copy" 
-            [class.copied]="copied"
-            (click)="copyResult()"
-          >
-            {{ copied ? '✓ 已複製' : '📋 複製' }}
-          </button>
         </div>
       }
 
@@ -243,6 +241,13 @@ import { EmojiDecryptPipe } from '../../pipes/emoji-decrypt.pipe';
     .btn-primary:disabled {
       background: #ccc;
       cursor: not-allowed;
+    }
+
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
     }
 
     .result-box {
