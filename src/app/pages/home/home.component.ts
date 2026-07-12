@@ -84,19 +84,17 @@ import { EmojiDecryptPipe } from '../../pipes/emoji-decrypt.pipe';
 
       @if (result) {
         <div class="result-section">
-          <div class="result-header">
-            <label>結果</label>
-            <button 
-              class="btn-copy" 
-              [class.copied]="copied"
-              (click)="copyResult()"
-            >
-              {{ copied ? '✓ 已複製' : '📋 複製' }}
-            </button>
-          </div>
+          <label>結果</label>
           <div class="result-box">
             <p class="result-text">{{ mode === 'encrypt' ? (inputText | emojiEncrypt:password) : (inputText | emojiDecrypt:password) }}</p>
           </div>
+          <button 
+            class="btn-copy" 
+            [class.copied]="copied"
+            (click)="copyResult()"
+          >
+            {{ copied ? '✓ 已複製' : '📋 複製' }}
+          </button>
         </div>
       }
 
@@ -211,6 +209,11 @@ import { EmojiDecryptPipe } from '../../pipes/emoji-decrypt.pipe';
       border-color: #6366f1;
     }
 
+    textarea.overLimit,
+    input.overLimit {
+      border-color: #dc2626;
+    }
+
     .warning {
       color: #dc2626;
       font-size: 0.75rem;
@@ -240,21 +243,6 @@ import { EmojiDecryptPipe } from '../../pipes/emoji-decrypt.pipe';
     .btn-primary:disabled {
       background: #ccc;
       cursor: not-allowed;
-    }
-
-    .result-section {
-      margin-bottom: 1.5rem;
-    }
-
-    .result-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.5rem;
-    }
-
-    .result-header label {
-      margin-bottom: 0;
     }
 
     .result-box {
@@ -405,6 +393,9 @@ export class HomeComponent {
   onInputChange() {
     this.copied = false;
     this.error = '';
+    if (this.mode === 'decrypt') {
+      this.result = false;
+    }
   }
 
   onPasswordChange() {
@@ -424,17 +415,17 @@ export class HomeComponent {
     this.showPassword = !this.showPassword;
   }
 
+  canSubmit(): boolean {
+    if (!this.inputText || !this.password) return false;
+    if (this.mode === 'encrypt' && this.inputText.length > 5000) return false;
+    return true;
+  }
+
   clearInput() {
     this.inputText = '';
     this.result = false;
     this.error = '';
     this.copied = false;
-  }
-
-  canSubmit(): boolean {
-    if (!this.inputText || !this.password) return false;
-    if (this.mode === 'encrypt' && this.inputText.length > 5000) return false;
-    return true;
   }
 
   process() {
@@ -469,17 +460,18 @@ export class HomeComponent {
     
     if (!text) return;
 
-    // Reset copied state first to ensure visual feedback on each click
-    this.copied = false;
-    
+    // Use the modern Clipboard API
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(() => {
         this.copied = true;
-        setTimeout(() => this.copied = false, 2000);
-      }).catch(() => {
+        setTimeout(() => this.copied = false, 5000);
+      }).catch((err) => {
+        console.error('Clipboard API failed:', err);
+        // Fallback
         this.copyWithExecCommand(text);
       });
     } else {
+      // Fallback for older browsers
       this.copyWithExecCommand(text);
     }
   }
@@ -496,8 +488,9 @@ export class HomeComponent {
     try {
       document.execCommand('copy');
       this.copied = true;
-      setTimeout(() => this.copied = false, 2000);
-    } catch {
+      setTimeout(() => this.copied = false, 5000);
+    } catch (err) {
+      console.error('execCommand copy failed:', err);
       this.copied = false;
     }
     document.body.removeChild(textArea);
